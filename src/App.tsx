@@ -81,8 +81,8 @@ export default function App() {
       <div className="flex-1 overflow-auto">
         <div className="p-8">
           {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
-          {currentView === 'categories' && <CategoriesManager />}
-          {currentView === 'vendors' && <VendorsManager />}
+          {currentView === 'categories' && <CategoriesManager userRole={userRole} />}
+          {currentView === 'vendors' && <VendorsManager userRole={userRole} />}
           {currentView === 'food-items' && <FoodItemsManager userRole={userRole} />}
           {currentView === 'quotes' && (
             <QuotesList 

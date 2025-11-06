@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { dataStore } from '../lib/store';
-import { FoodItem, Category, QuoteItem, Vendor, UserRole, MiscellaneousExpenses, MiscellaneousExpenseItem, Quote } from '../lib/types';
+import { FoodItem, Category, QuoteItem, Vendor, UserRole, MiscellaneousExpenses, MiscellaneousExpenseItem, Quote, Customer } from '../lib/types';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,7 +8,9 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
-import { Plus, FileText } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { Plus, FileText, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 interface QuoteGeneratorProps {
@@ -22,6 +24,9 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
   const [categories, setCategories] = useState<Category[]>([]);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Map<string, { vendorId: string; quantity: number }>>(new Map());
   const [clientInfo, setClientInfo] = useState({
     clientName: '',
@@ -50,21 +55,37 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
     setCategories(dataStore.getCategories());
     setFoodItems(dataStore.getFoodItems());
     setVendors(dataStore.getVendors());
+    setCustomers(dataStore.getCustomers());
   }, []);
 
   useEffect(() => {
-    if (quoteId) {
+    if (quoteId && customers.length > 0) {
       const quote = dataStore.getQuotes().find(q => q.id === quoteId);
       if (quote && (quote.status === 'draft' || quote.status === 'pending' || quote.status === 'rejected')) {
         setIsEditing(true);
         loadQuoteData(quote);
       }
-    } else {
+    } else if (!quoteId) {
       setIsEditing(false);
+      setSelectedCustomerId('');
+      setCustomerPopoverOpen(false);
     }
-  }, [quoteId]);
+  }, [quoteId, customers]);
 
   const loadQuoteData = (quote: Quote) => {
+    // Try to find matching customer
+    const matchingCustomer = customers.find(c => 
+      c.name === quote.clientName && 
+      c.email === quote.clientEmail && 
+      c.phone === quote.clientPhone
+    );
+    
+    if (matchingCustomer) {
+      setSelectedCustomerId(matchingCustomer.id);
+    } else {
+      setSelectedCustomerId('');
+    }
+
     // Load client info
     setClientInfo({
       clientName: quote.clientName,
@@ -284,6 +305,95 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6">
               <h2 className="text-gray-900 mb-4">Client Information</h2>
+              
+              {/* Customer Selection */}
+              <div className="mb-4 pb-4 border-b">
+                <Label htmlFor="customerSelect" className="mb-2 block">Select Customer (Optional)</Label>
+                <Popover open={customerPopoverOpen} onOpenChange={setCustomerPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between"
+                      type="button"
+                    >
+                      {selectedCustomerId
+                        ? customers.find((customer) => customer.id === selectedCustomerId)?.name
+                        : "Search and select customer..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Search customers..." />
+                      <CommandList>
+                        <CommandEmpty>No customers found.</CommandEmpty>
+                        <CommandGroup>
+                          {customers.map((customer) => (
+                            <CommandItem
+                              key={customer.id}
+                              value={`${customer.name} ${customer.email} ${customer.phone}`}
+                              onSelect={() => {
+                                const newSelectedId = customer.id === selectedCustomerId ? '' : customer.id;
+                                setSelectedCustomerId(newSelectedId);
+                                if (newSelectedId) {
+                                  setClientInfo({
+                                    ...clientInfo,
+                                    clientName: customer.name,
+                                    clientEmail: customer.email,
+                                    clientPhone: customer.phone,
+                                    venueAddress: customer.address || '',
+                                  });
+                                } else {
+                                  setClientInfo({
+                                    ...clientInfo,
+                                    clientName: '',
+                                    clientEmail: '',
+                                    clientPhone: '',
+                                    venueAddress: '',
+                                  });
+                                }
+                                setCustomerPopoverOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  selectedCustomerId === customer.id ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{customer.name}</span>
+                                <span className="text-xs text-gray-500">{customer.email} • {customer.phone}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                {selectedCustomerId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCustomerId('');
+                      setClientInfo({
+                        ...clientInfo,
+                        clientName: '',
+                        clientEmail: '',
+                        clientPhone: '',
+                        venueAddress: '',
+                      });
+                    }}
+                    className="mt-2 text-xs"
+                  >
+                    Clear Selection
+                  </Button>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="clientName">Client Name</Label>

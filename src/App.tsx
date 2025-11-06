@@ -7,11 +7,12 @@ import { QuotesList } from './components/QuotesList';
 import { CateringTeamView } from './components/CateringTeamView';
 import { VendorsManager } from './components/VendorsManager';
 import { Toaster } from './components/ui/sonner';
-import { Home, Package, FolderOpen, FileText, Users, Truck } from 'lucide-react';
+import { Home, Package, FolderOpen, FileText, Users, Truck, UserCircle } from 'lucide-react';
 import { UserRole } from './lib/types';
 import logo from 'figma:asset/8ba9c93b4117a05c74975d26e97d8b624daa00b6.png';
+import { CustomersManager } from './components/CustomersManager';
 
-type View = 'dashboard' | 'categories' | 'food-items' | 'quotes' | 'generate-quote' | 'catering-team' | 'vendors';
+type View = 'dashboard' | 'categories' | 'food-items' | 'quotes' | 'generate-quote' | 'catering-team' | 'vendors' | 'customers';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -22,6 +23,7 @@ export default function App() {
     { id: 'dashboard' as View, label: 'Dashboard', icon: Home },
     { id: 'categories' as View, label: 'Categories', icon: FolderOpen },
     { id: 'vendors' as View, label: 'Vendors', icon: Truck },
+    { id: 'customers' as View, label: 'Customers', icon: UserCircle },
     { id: 'food-items' as View, label: 'Food Items', icon: Package },
     { id: 'quotes' as View, label: 'Quotes', icon: FileText },
     { id: 'generate-quote' as View, label: 'Generate Quote', icon: FileText },
@@ -83,6 +85,7 @@ export default function App() {
           {currentView === 'dashboard' && <Dashboard onNavigate={setCurrentView} />}
           {currentView === 'categories' && <CategoriesManager userRole={userRole} />}
           {currentView === 'vendors' && <VendorsManager userRole={userRole} />}
+          {currentView === 'customers' && <CustomersManager userRole={userRole} />}
           {currentView === 'food-items' && <FoodItemsManager userRole={userRole} />}
           {currentView === 'quotes' && (
             <QuotesList 

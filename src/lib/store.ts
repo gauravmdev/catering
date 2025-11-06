@@ -1,4 +1,4 @@
-import { Category, FoodItem, Quote, Vendor } from './types';
+import { Category, FoodItem, Quote, Vendor, Customer } from './types';
 import { initializeFoodItems } from './foodItemsData';
 
 // Mock data store - in production, this would be replaced with Supabase
@@ -143,6 +143,33 @@ class DataStore {
     },
   ];
 
+  private customers: Customer[] = [
+    {
+      id: '1',
+      name: 'Rajesh Kumar',
+      email: 'rajesh.kumar@example.com',
+      phone: '9876543210',
+      address: '123 Main Street, Mumbai',
+      createdAt: new Date('2024-01-01'),
+    },
+    {
+      id: '2',
+      name: 'Priya Sharma',
+      email: 'priya.sharma@example.com',
+      phone: '9876543211',
+      address: '456 Park Avenue, Delhi',
+      createdAt: new Date('2024-01-01'),
+    },
+    {
+      id: '3',
+      name: 'Amit Patel',
+      email: 'amit.patel@example.com',
+      phone: '9876543212',
+      address: '789 Business District, Bangalore',
+      createdAt: new Date('2024-01-01'),
+    },
+  ];
+
   private foodItems: FoodItem[] = initializeFoodItems().map((item, index) => ({
     ...item,
     id: (index + 1).toString(),
@@ -245,6 +272,39 @@ class DataStore {
     const index = this.vendors.findIndex(v => v.id === id);
     if (index === -1) return false;
     this.vendors.splice(index, 1);
+    return true;
+  }
+
+  // Customers
+  getCustomers(): Customer[] {
+    return [...this.customers];
+  }
+
+  getCustomer(id: string): Customer | null {
+    return this.customers.find(c => c.id === id) || null;
+  }
+
+  addCustomer(customer: Omit<Customer, 'id' | 'createdAt'>): Customer {
+    const newCustomer: Customer = {
+      ...customer,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+    };
+    this.customers.push(newCustomer);
+    return newCustomer;
+  }
+
+  updateCustomer(id: string, updates: Partial<Customer>): Customer | null {
+    const index = this.customers.findIndex(c => c.id === id);
+    if (index === -1) return null;
+    this.customers[index] = { ...this.customers[index], ...updates };
+    return this.customers[index];
+  }
+
+  deleteCustomer(id: string): boolean {
+    const index = this.customers.findIndex(c => c.id === id);
+    if (index === -1) return false;
+    this.customers.splice(index, 1);
     return true;
   }
 

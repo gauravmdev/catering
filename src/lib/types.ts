@@ -14,6 +14,15 @@ export interface Vendor {
   createdAt: Date;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  createdAt: Date;
+}
+
 export interface VendorPrice {
   vendorId: string;
   costPrice: number;

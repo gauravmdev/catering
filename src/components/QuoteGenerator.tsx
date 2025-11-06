@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
-import { Plus, FileText, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, FileText, Check, ChevronsUpDown, Search } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 interface QuoteGeneratorProps {
@@ -27,6 +27,7 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [customerPopoverOpen, setCustomerPopoverOpen] = useState(false);
+  const [menuItemSearch, setMenuItemSearch] = useState<string>('');
   const [selectedItems, setSelectedItems] = useState<Map<string, { vendorId: string; quantity: number }>>(new Map());
   const [clientInfo, setClientInfo] = useState({
     clientName: '',
@@ -119,7 +120,18 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
   };
 
   const getItemsByCategory = (categoryId: string) => {
-    return foodItems.filter(item => item.categoryId === categoryId);
+    let items = foodItems.filter(item => item.categoryId === categoryId);
+    
+    // Filter by search term if provided
+    if (menuItemSearch.trim()) {
+      const searchLower = menuItemSearch.toLowerCase();
+      items = items.filter(item => 
+        item.name.toLowerCase().includes(searchLower) ||
+        item.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return items;
   };
 
   const updateQuantity = (itemId: string, vendorId: string, change: number) => {
@@ -269,6 +281,7 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
       setSelectedItems(new Map());
       setGst(5);
       setDiscount(0);
+      setMenuItemSearch('');
       setMiscExpenses({
         transport: { quantity: 0, price: 0 },
         waiters: { quantity: 0, price: 0 },
@@ -485,6 +498,18 @@ export function QuoteGenerator({ userRole, quoteId, onQuoteSaved }: QuoteGenerat
 
             <Card className="p-6">
               <h2 className="text-gray-900 mb-4">Select Menu Items</h2>
+              
+              {/* Search Input */}
+              <div className="mb-4 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search menu items by name or description..."
+                  value={menuItemSearch}
+                  onChange={(e) => setMenuItemSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
               <Accordion type="multiple" className="w-full">
                 {categories.map((category) => {
                   const items = getItemsByCategory(category.id);

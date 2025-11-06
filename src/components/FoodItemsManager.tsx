@@ -25,6 +25,7 @@ export function FoodItemsManager({ userRole }: FoodItemsManagerProps) {
   const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterDiet, setFilterDiet] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -115,7 +116,8 @@ export function FoodItemsManager({ userRole }: FoodItemsManagerProps) {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || item.categoryId === filterCategory;
-    return matchesSearch && matchesCategory;
+    const matchesDiet = filterDiet === 'all' || item.diet === filterDiet;
+    return matchesSearch && matchesCategory && matchesDiet;
   });
 
   const getCategoryName = (categoryId: string) => {
@@ -308,6 +310,16 @@ export function FoodItemsManager({ userRole }: FoodItemsManagerProps) {
                   {category.name}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterDiet} onValueChange={setFilterDiet}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="All Diet Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Diet Types</SelectItem>
+              <SelectItem value="veg">🟢 Veg</SelectItem>
+              <SelectItem value="non-veg">🔴 Non-Veg</SelectItem>
             </SelectContent>
           </Select>
         </div>
